@@ -8,10 +8,10 @@ This project automates the redaction of sensitive information in PDF files. It p
 ## Project Structure
 
 - **`input_pdfs/`**: Contains the original PDF files that need to be redacted.
-  - Example: `input_pdfs/Gerekceli-karar-1.pdf`
+  - Example: `input_pdfs/test.pdf`
   
 - **`output_pdfs/`**: Will hold the redacted PDF files. The filenames will include a `_redacted` suffix.
-  - Example: `output_pdfs/Gerekceli-karar-1_redacted.pdf`
+  - Example: `output_pdfs/test_redacted.pdf`
   
 - **`run.py`**: The main script for processing PDFs. It reads from `input_pdfs`, applies redactions, and saves the results to `output_pdfs`.
   
