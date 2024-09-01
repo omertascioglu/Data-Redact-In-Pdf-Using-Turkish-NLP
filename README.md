@@ -3,7 +3,7 @@
 
 ## Overview
 
-This project automates the redaction of sensitive information in PDF files. It processes PDFs to obscure sensitive data and saves the redacted versions in a specified output folder. The redaction is achieved through a combination of natural language processing (NLP) and regular expressions to identify and replace sensitive information.
+This project automates the redaction of sensitive information in PDF files. It processes PDFs to obscure sensitive data and saves the redacted versions in a specified output folder. The redaction is achieved through a combination of natural language processing (NLP) and regular expressions to identify and replace sensitive information. End of all it creates a new pdf file automatically 
 
 ## Project Structure
 
