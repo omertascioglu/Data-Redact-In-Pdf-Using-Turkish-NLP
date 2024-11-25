@@ -1,15 +1,14 @@
 import fitz  # PyMuPDF
 import random
 import string
-import stanza
+import spacy
 import re
 import os
 
 class Redactor:
-
     def __init__(self, path):
         self.path = path
-        self.nlp = stanza.Pipeline('tr', processors='tokenize,ner')
+        self.nlp = spacy.load("tr_core_news_lg")
 
     @staticmethod
     def random_string(length):
@@ -24,8 +23,8 @@ class Redactor:
         doc = self.nlp(text)
         sensitive_data = []
 
-        for sentence in doc.sentences:
-            for ent in sentence.ents:
+        for ent in doc.ents:
+            if ent.label_ in ["GPE", "ORG", "NORP", "TITLE", "PERSON", "EVENT", "PRODUCT"]:  
                 sensitive_data.append(ent.text)
 
         numbers = re.findall(r'\b\d+\b', text)
@@ -40,6 +39,7 @@ class Redactor:
             page.wrap_contents()
             text = page.get_text("text")
 
+            # Hassas verileri bul
             sensitive_data = self.get_sensitive_data(text)
 
             for data in sensitive_data:
