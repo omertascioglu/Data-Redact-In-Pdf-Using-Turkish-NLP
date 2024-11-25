@@ -29,5 +29,5 @@ This project automates the redaction of sensitive information in PDF files. It p
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/yourusername/your-repository.git
+   git clone https://github.com/omertascioglu/Data-Redact-In-Pdf-Using-Turkish-NLP.git
    cd your-repository
