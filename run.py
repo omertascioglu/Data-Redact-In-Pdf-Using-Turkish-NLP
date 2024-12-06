@@ -19,46 +19,79 @@ class Redactor:
     def random_number(length):
         return ''.join(random.choice(string.digits) for _ in range(length))
 
-    def get_sensitive_data(self, text):
-        doc = self.nlp(text)
-        sensitive_data = []
 
-        for ent in doc.ents:
-            if ent.label_ in ["GPE", "ORG", "NORP", "TITLE", "PERSON", "EVENT", "PRODUCT"]:  
-                sensitive_data.append(ent.text)
+    def get_text_info(self, page):
+        text_info = []
+        blocks = page.get_text("dict")["blocks"]
 
-        numbers = re.findall(r'\b\d+\b', text)
-        sensitive_data.extend(numbers)
-
-        return sensitive_data
+        for b in blocks:
+            if "lines" in b:
+                for l in b["lines"]:
+                    for s in l["spans"]:
+                        text_info.append({
+                            "text": s["text"],
+                            "bbox": s["bbox"],
+                            "font_size": s["size"]
+                        })
+        return text_info
 
     def redaction(self):
         doc = fitz.open(self.path)
 
         for page in doc:
             page.wrap_contents()
-            text = page.get_text("text")
+            text_info = self.get_text_info(page)
 
-            # Hassas verileri bul
-            sensitive_data = self.get_sensitive_data(text)
+            for info in text_info:
+                text = info["text"]
+                if self.is_sensitive_data(text):
+                    bbox = info["bbox"]
+                    original_font_size = info["font_size"]
 
-            for data in sensitive_data:
-                areas = page.search_for(data)
+                    # Redaksiyon alanını oluştur
+                    rect = fitz.Rect(bbox)
 
-                if data.isdigit():
-                    replacement_text = self.random_number(len(data))
-                else:
-                    replacement_text = self.random_string(len(data))
+                    # Yeni metin oluştur
+                    if text.isdigit():
+                        replacement_text = self.random_number(len(text))
+                    else:
+                        replacement_text = self.random_string(len(text))
 
-                for area in areas:
-                    page.add_redact_annot(area, fill=(1, 1, 1))
+                    # İlk redaksiyon - temizleme
+                    annot = page.add_redact_annot(rect)
                     page.apply_redactions()
 
-                    page.add_redact_annot(area, text=replacement_text, fill=(1, 1, 1), align=fitz.TEXT_ALIGN_JUSTIFY,
-                                          fontsize=46)
+                    # İkinci redaksiyon - yeni metin
+                    annot = page.add_redact_annot(
+                        rect,
+                        text=replacement_text,
+                        fontname="Helvetica",
+                        fontsize=original_font_size,
+                        text_color=(0, 0, 0),
+                        fill=(1, 1, 1),
+                        align=fitz.TEXT_ALIGN_LEFT
+                    )
                     page.apply_redactions()
 
         return doc
+    
+    def is_sensitive_data(self, text):
+        """Hassas veri kontrolü - daha seçici"""
+        # Çok kısa metinleri atla
+        if len(text.strip()) < 2:
+            return False
+
+        doc = self.nlp(text.strip())
+        sensitive_data = []
+
+        for ent in doc.ents:
+            if ent.label_ in ["GPE", "ORG", "NORP", "TITLE", "PERSON", "EVENT", "PRODUCT"]:
+                sensitive_data.append(ent.text)
+
+        numbers = re.findall(r'\b\d+\b', text)
+        sensitive_data.extend(numbers)
+
+        return sensitive_data
 
 def process_pdfs(input_folder, output_folder):
     if not os.path.exists(output_folder):
